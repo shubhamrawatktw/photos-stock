@@ -8,12 +8,13 @@ const searchUrl = `https://api.unsplash.com/search/photos/`;
 function App() {
   const [loading, setLoading] = useState(false);
   const [photos, setPhotos] = useState([]);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(0);
   const [query, setQuery] = useState("");
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    fetchImages();
+    setPage(1)
+   
   };
 
   const fetchImages = async () => {
@@ -33,7 +34,10 @@ function App() {
       const data = await res.json();
       // console.log(data);
       setPhotos((oldPhotos) => {
-        if (query) {
+        if (query && page ===1) {
+          return data.results
+        }
+        else if (query) {
           return [...oldPhotos, ...data.results];
         } else {
           return [...oldPhotos, ...data];
@@ -48,6 +52,7 @@ function App() {
 
   useEffect(() => {
     fetchImages();
+    // eslint-disable-next-line
   }, [page]);
 
   useEffect(() => {
@@ -62,6 +67,7 @@ function App() {
       }
     });
     return () => window.removeEventListener("scroll", event);
+    // eslint-disable-next-line
   }, []);
 
   return (
