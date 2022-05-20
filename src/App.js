@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { FaSearch } from "react-icons/fa";
 import Photo from "./Photo";
 const clientID = `?client_id=${process.env.REACT_APP_ACCESS_KEY}`;
@@ -8,11 +8,21 @@ const searchUrl = `https://api.unsplash.com/search/photos/`;
 function App() {
   const [loading, setLoading] = useState(false);
   const [photos, setPhotos] = useState([]);
-  const [page, setPage] = useState(0);
+  const [page, setPage] = useState(1);
   const [query, setQuery] = useState("");
+ const mounted = useRef(false)
+const [newImages,setNewImages] = useState(false)
+
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (!query) {
+      return 
+    }
+    if (page === 1) {
+      fetchImages()
+      return 
+    }
     setPage(1)
    
   };
@@ -43,8 +53,10 @@ function App() {
           return [...oldPhotos, ...data];
         }
       });
+      setNewImages(false)
       setLoading(false);
     } catch (error) {
+      setNewImages(false)
       setLoading(false);
       console.log(error);
     }
@@ -55,20 +67,44 @@ function App() {
     // eslint-disable-next-line
   }, [page]);
 
-  useEffect(() => {
-    const event = window.addEventListener("scroll", () => {
-      if (
-        !loading &&
-        window.innerHeight + window.scrollY >= document.body.scrollHeight - 3
-      ) {
-        setPage((oldPage) => {
-          return oldPage + 1;
-        });
-      }
-    });
-    return () => window.removeEventListener("scroll", event);
-    // eslint-disable-next-line
-  }, []);
+  // useEffect(() => {
+  //   const event = window.addEventListener("scroll", () => {
+  //     if (
+  //       !loading &&
+  //       window.innerHeight + window.scrollY >= document.body.scrollHeight - 3
+  //     ) {
+  //       setPage((oldPage) => {
+  //         return oldPage + 1;
+  //       });
+  //     }
+  //   });
+  //   return () => window.removeEventListener("scroll", event);
+  //   // eslint-disable-next-line
+  // }, []);
+
+useEffect(()=>{
+  if (mounted.current) {
+    mounted.current = true
+    return 
+  }
+  if (!newImages) {
+    return
+  }
+if (loading) {
+  return 
+}
+setPage((oldPage)=>oldPage + 1)
+},[newImages])
+const event = ()=>{
+  if (window.innerHeight + window.scrollY >= document.body.scrollHeight-3) {
+    setNewImages(true)
+  }
+}
+
+useEffect(()=>{
+window.addEventListener("scroll",event)
+return ()=> window.removeEventListener("scroll",event)
+},[])
 
   return (
     <main>
@@ -89,7 +125,7 @@ function App() {
       <section className="photos">
         <div className="photos-center">
           {photos.map((image, index) => {
-            return <Photo key={index} {...image} />;
+            return <Photo key={image.id} {...image} />;
           })}
         </div>
         {loading && <h2 className="loading">Loading...</h2>}
